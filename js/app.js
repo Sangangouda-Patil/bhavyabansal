@@ -52,78 +52,98 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Custom Worm-like Cursor with Tail Effect
-const cursor = document.createElement('div');
-cursor.id = 'cursor';
-document.body.appendChild(cursor);
 
-// Add tail elements dynamically
-const tail = [];
-const numOfTailElements = 10; // Number of tail elements, adjust for longer/shorter tail
-for (let i = 0; i < numOfTailElements; i++) {
-  const tailElement = document.createElement('div');
-  tailElement.classList.add('cursor-tail');
-  document.body.appendChild(tailElement);
-  tail.push(tailElement);
-}
+ // Create the main cursor element
+ const cursor = document.createElement('div');
+ cursor.id = 'cursor';
+ document.body.appendChild(cursor);
 
-// Style the custom cursor with the worm effect and color
-const style = document.createElement('style');
-style.innerHTML = `
-  #cursor {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background-color: #cda6c5; /* Custom color */
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    transition: transform 0.1s ease-out;
-  }
+ // Create tail elements dynamically
+ const tail = [];
+ const numOfTailElements = 15; // Number of tail elements
+ for (let i = 0; i < numOfTailElements; i++) {
+   const tailElement = document.createElement('div');
+   tailElement.classList.add('cursor-tail');
+   document.body.appendChild(tailElement);
+   tail.push(tailElement);
+ }
 
-  .cursor-tail {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background-color: #cda6c5; /* Same custom color */
-    border-radius: 50%;
-    pointer-events: none;
-    opacity: 0.5;
-    transition: transform 0.1s ease-out;
-  }
+ // Style for the custom cursor and tail elements
+ const style = document.createElement('style');
+ style.innerHTML = `
+   #cursor {
+     position: absolute;
+     width: 30px;
+     height: 30px;
+     background-color: #cda6c5; /* Custom color */
+     border-radius: 50%;
+     pointer-events: none;
+     z-index: 9999;
+     transform: translate(-50%, -50%);
+     transition: transform 0.1s ease-out;
+   }
 
-  @keyframes worm {
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.3);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
-`;
-document.head.appendChild(style);
+   .cursor-tail {
+     position: absolute;
+     width: 24px;
+     height: 24px;
+     background-color: #cda6c5; /* Same custom color */
+     border-radius: 50%;
+     pointer-events: none;
+     opacity: 0.6;
+     z-index: 9998;
+     transition: transform 0.1s ease-out, opacity 0.3s ease-out;
+   }
 
-// Track mouse movement and update the cursor position
-document.addEventListener('mousemove', function(e) {
-  // Move the main cursor
-  cursor.style.left = e.pageX + 'px';
-  cursor.style.top = e.pageY + 'px';
+   /* Worm-like animation for the tail */
+   @keyframes worm-trail {
+     0% {
+       transform: scale(1);
+       opacity: 0.6;
+     }
+     100% {
+       transform: scale(0.5);
+       opacity: 0;
+     }
+   }
+ `;
+ document.head.appendChild(style);
 
-  // Update tail elements to follow the cursor
-  for (let i = numOfTailElements - 1; i > 0; i--) {
-    const tailPos = tail[i - 1].getBoundingClientRect();
-    tail[i].style.left = `${tailPos.left}px`;
-    tail[i].style.top = `${tailPos.top}px`;
-  }
+ // Track mouse movement and update the cursor position
+ document.addEventListener('mousemove', function(e) {
+   const mouseX = e.pageX;
+   const mouseY = e.pageY;
 
-  // Set the first tail element to the cursor's position
-  tail[0].style.left = `${e.pageX}px`;
-  tail[0].style.top = `${e.pageY}px`;
-});
+   // Move the main cursor
+   cursor.style.left = `${mouseX}px`;
+   cursor.style.top = `${mouseY}px`;
 
+   // Update the tail elements
+   for (let i = numOfTailElements - 1; i > 0; i--) {
+     const prevTail = tail[i - 1];
+     const currentTail = tail[i];
+
+     // Make the tail follow the previous element in the chain
+     currentTail.style.left = `${prevTail.offsetLeft}px`;
+     currentTail.style.top = `${prevTail.offsetTop}px`;
+
+     // Add a scaling and fading effect for each tail element
+     currentTail.style.opacity = 1 - (i / numOfTailElements);
+     currentTail.style.transform = `scale(${1 - (i / numOfTailElements)})`;
+   }
+
+   // Set the first tail element to the cursor's position
+   tail[0].style.left = `${mouseX}px`;
+   tail[0].style.top = `${mouseY}px`;
+ });
+
+ // Make the cursor pulse (scale up and down)
+ setInterval(() => {
+   cursor.style.transform = 'scale(1.3)';
+   setTimeout(() => {
+     cursor.style.transform = 'scale(1)';
+   }, 200);
+ }, 1000);
   gsap.registerPlugin(ScrollTrigger);
 
   // --------------------------------------------- //
